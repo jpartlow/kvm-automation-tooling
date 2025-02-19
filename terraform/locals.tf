@@ -10,9 +10,9 @@ locals {
   platform_pool_name = "${var.platform}.pool"
 
   platform_elements = split("-", var.platform)
-  os_name = platform_elements[0]
-  os_version = platform_elements[1]
-  os_arch = platform_elements[2]
+  os_name = local.platform_elements[0]
+  os_version = local.platform_elements[1]
+  os_arch = local.platform_elements[2]
 
   ubuntu_version_names = {
     "1804" = "bionic",
@@ -25,9 +25,13 @@ locals {
     "ubuntu" = "https://cloud-images.ubuntu.com",
   }
   image_server = lookup(local.image_servers, local.os_name, "")
+  platform_source_image_names = {
+    "ubuntu" = "${local.ubuntu_version_name}-server-cloudimg-${local.os_arch}",
+  }
+  platform_source_image_name = lookup(local.platform_source_image_names, local.os_name, "")
   platform_sources = {
     # Ex: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-    "ubuntu" = "${local.image_server}/${local.ubuntu_version_name}/current/${local.os_name}-server-cloudimg-${local.os_arch}.img",
+    "ubuntu" = "${local.image_server}/${local.ubuntu_version_name}/current/${local.platform_source_image_name}.img",
     # TODO: debian, rocky, suse, fedora, etc.
   }
   platform_source = lookup(local.platform_sources, local.os_name, "")

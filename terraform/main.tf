@@ -6,13 +6,17 @@ terraform {
   }
 }
 
+provider "libvirt" {
+  uri = "qemu:///system"
+}
+
 data "external" "check_pool_dir" {
-  program = ["${path.module}/tools/check_dir.sh", "/path/to/pool/directory"]
+  program = ["${path.module}/tools/check_dir.sh", local.platform_image_pool_path]
 }
 
 # Define a per platform image pool just once.
 resource "libvirt_pool" "image_pool" {
-  count = data.external.check_pool_dir.result.exists ? 0 : 1
+  count = data.external.check_pool_dir.result.exists == "true" ? 0 : 1
   name   = local.platform_pool_name
   type   = "dir"
   target {
@@ -22,8 +26,8 @@ resource "libvirt_pool" "image_pool" {
 
 # We fetch the latest ubuntu release image from their mirrors
 resource "libvirt_volume" "base-volume-qcow2" {
-  name   = "base.${var.platform}.qcow2"
-  pool   = default
+  name   = "${local.platform_source_image_name}.base.qcow2"
+  # use the default pool (/var/lib/libvirt/images) for the base volume
   source = local.platform_source
   format = "qcow2"
 }

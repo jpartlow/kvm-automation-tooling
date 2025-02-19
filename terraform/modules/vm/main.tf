@@ -1,7 +1,10 @@
 # Originally from: https://github.com/dmacvicar/terraform-provider-libvirt/blob/v0.8.1/examples/v0.13/ubuntu/ubuntu-example.tf
-
-provider "libvirt" {
-  uri = "qemu:///system"
+terraform {
+  required_providers {
+    libvirt = {
+      source = "dmacvicar/libvirt"
+    }
+  }
 }
 
 # We fetch the latest ubuntu release image from their mirrors
@@ -9,9 +12,9 @@ resource "libvirt_volume" "volume-qcow2" {
   name   = "vm-image.${var.hostname}.qcow2"
   pool   = var.pool_name
   base_volume_name = var.base_volume_name
-  base_volume_pool = default
+  base_volume_pool = "default"
   format = "qcow2"
-  size   = var.disk_size # need to use cloud-init to grow the partition?
+  size   = var.disk_size * local.gigabyte # need to use cloud-init to grow the partition?
 }
 
 locals {
@@ -36,6 +39,7 @@ locals {
       hostname = var.hostname,
     }
   )
+  gigabyte = 1024 * 1024 * 1024
 }
 
 # for more info about parameters check this out
@@ -44,9 +48,9 @@ locals {
 # you can add also meta_data field
 resource "libvirt_cloudinit_disk" "commoninit" {
   name           = "commoninit.iso.${var.hostname}"
-  user_data      = locals.user_data
-  network_config = locals.network_config
-  meta_data      = locals.meta_data
+  user_data      = local.user_data
+  network_config = local.network_config
+  meta_data      = local.meta_data
   pool           = var.pool_name
 }
 
