@@ -1,10 +1,39 @@
-locals {
-  ssh_public_key = file(var.ssh_public_key_path)
+terraform {
+  required_providers {
+    libvirt = {
+      source = "dmacvicar/libvirt"
+    }
+  }
 }
 
+data "external" "check_pool_dir" {
+  program = ["${path.module}/tools/check_dir.sh", "/path/to/pool/directory"]
+}
+
+# Define a per platform image pool just once.
+resource "libvirt_pool" "image_pool" {
+  count = data.external.check_pool_dir.result.exists ? 0 : 1
+  name   = local.platform_pool_name
+  type   = "dir"
+  target {
+    path = local.platform_image_pool_path
+  }
+}
+
+# We fetch the latest ubuntu release image from their mirrors
+resource "libvirt_volume" "base-volume-qcow2" {
+  name   = "base.${var.platform}.qcow2"
+  pool   = default
+  source = local.platform_source
+  format = "qcow2"
+}
+
+# The puppet-server/db/postgresql node
 module "primary" {
   source = "./modules/vm"
-  hostname = "${var.cluster_id}-primary"
+  hostname = "${var.cluster}-${var.platform}-primary"
+  pool_name = local.platform_pool_name
+  base_volume_name = libvirt_volume.base-volume-qcow2.name
   cpus = var.primary_cpus
   memory = var.primary_memory
   disk_size = var.primary_disk_size
@@ -13,10 +42,13 @@ module "primary" {
   ssh_public_key = local.ssh_public_key
 }
 
+# The puppet-agent nodes
 module "agent" {
   source = "./modules/vm"
   count = var.agent_count
-  hostname = "${var.cluster_id}-agent-${count.index}"
+  hostname = "${var.cluster}-${var.platform}-agent-${count.index}"
+  pool_name = local.platform_pool_name
+  base_volume_name = libvirt_volume.base-volume-qcow2.name
   cpus = var.agent_cpus
   memory = var.agent_memory
   disk_size = var.agent_disk_size

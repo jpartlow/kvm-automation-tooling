@@ -1,31 +1,17 @@
 # Originally from: https://github.com/dmacvicar/terraform-provider-libvirt/blob/v0.8.1/examples/v0.13/ubuntu/ubuntu-example.tf
-terraform {
-  required_providers {
-    libvirt = {
-      source = "dmacvicar/libvirt"
-    }
-  }
-}
 
 provider "libvirt" {
   uri = "qemu:///system"
 }
 
-resource "libvirt_pool" "ubuntu" {
-  name   = "ubuntu"
-  type   = "dir"
-  target {
-    path = "/var/lib/libvirt/images/ubuntu-2404-amd64"
-  }
-}
-
 # We fetch the latest ubuntu release image from their mirrors
-resource "libvirt_volume" "ubuntu-qcow2" {
-  name   = "ubuntu-qcow2"
-  pool   = libvirt_pool.ubuntu.name
-  source = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+resource "libvirt_volume" "volume-qcow2" {
+  name   = "vm-image.${var.hostname}.qcow2"
+  pool   = var.pool_name
+  base_volume_name = var.base_volume_name
+  base_volume_pool = default
   format = "qcow2"
-  size   = var.disk_size
+  size   = var.disk_size # need to use cloud-init to grow the partition?
 }
 
 locals {
@@ -57,16 +43,16 @@ locals {
 # Use CloudInit to add our ssh-key to the instance
 # you can add also meta_data field
 resource "libvirt_cloudinit_disk" "commoninit" {
-  name           = "commoninit.iso"
+  name           = "commoninit.iso.${var.hostname}"
   user_data      = locals.user_data
   network_config = locals.network_config
   meta_data      = locals.meta_data
-  pool           = libvirt_pool.ubuntu.name
+  pool           = var.pool_name
 }
 
 # Create the machine
-resource "libvirt_domain" "domain-ubuntu" {
-  name   = "ubuntu-terraform-2"
+resource "libvirt_domain" "domain" {
+  name   = "vm.${var.hostname}"
   memory = var.memory
   vcpu   = var.cpus
 
@@ -94,7 +80,7 @@ resource "libvirt_domain" "domain-ubuntu" {
   }
 
   disk {
-    volume_id = libvirt_volume.ubuntu-qcow2.id
+    volume_id = libvirt_volume.volume-qcow2.id
   }
 
   #  graphics {
