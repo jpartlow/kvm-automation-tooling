@@ -24,15 +24,15 @@
 # @param $agent_mem_mb The amount of memory in MB to allocate to each agent vm.
 # @param $agent_disk_gb The amount of disk space in GB to allocate to each
 # agent vm.
+# @param $image_download_dir The directory where base os images are downloaded to.
 # @param $libvirt_images_dir The base directory where libvirt images are
 # stored.
-# @param $libvirt_group The group that owns the libvirt images directory.
 plan kvm_automation_tooling::standup_cluster(
   String $cluster_name,
   String $user = system::env('USER'),
   Kvm_automation_tooling::Architectures $architecture = 'singular',
   Kvm_automation_tooling::Operating_systems $os,
-  String $os_version,
+  Kvm_automation_tooling::Version $os_version,
   Kvm_automation_tooling::Os_arch $os_arch,
   Integer $agents = 1,
   Integer $primary_cpus = 4,
@@ -41,21 +41,17 @@ plan kvm_automation_tooling::standup_cluster(
   Integer $agent_cpus = 1,
   Integer $agent_mem_mb = 512,
   Integer $agent_disk_gb = 10,
+  String $image_download_dir = '~/images',
   String $libvirt_images_dir = '/var/lib/libvirt/images',
-  String $libvirt_group = 'libvirt',
 ) {
-  $platform = "${os}-${os_version}-${os_arch}"
+  $platform = kvm_automation_tooling::platform($os, $os_version, $os_arch)
   $cluster_id = "${cluster_name}-${architecture}-${platform}"
   $primary_hostname = "${cluster_id}-primary"
   $agent_hostnames = $agents.map |$i| { "${cluster_id}-agent-${i}" }
 
-  # Create libvirt images subdirectory.
-  $images_dir = "${libvirt_images_dir}/${cluster_id}"
-  run_command(@("EOS"), 'localhost', "Create libvirt images subdirectory ${images_dir}.")
-    mkdir -p ${images_dir} && \
-    chmod 755 ${images_dir} && \
-    chown root:${libvirt_group} ${images_dir}
-    |-EOS
+  # Ensure base image is present.
+  $base_image_path = "${libvirt_images_dir}/${platform}.qcow2"
+  # Ensure platform image pool exists.
 
   # Create terraform instance subdirectory for tfvars and tfstate.
   $terraform_instances_dir = "./terraform/instances/${cluster_id}"
@@ -64,14 +60,5 @@ plan kvm_automation_tooling::standup_cluster(
     chown ${user}:${user} ${terraform_instances_dir}
     |-EOS
 
-  # Create cloud-init subdirectory.
-  $cloud_init_dir = "./cloud-init/${cluster_id}"
-  run_command(@("EOS"), 'localhost', "Creating cloud-init subdirectory ${cloud_init_dir}.")
-    mkdir -p ${cloud_init_dir} && \
-    chown ${user}:${user} ${cloud_init_dir}
-    |-EOS
-
-  # Generate cloud-init files.
-#  probably from erb templates
   # Terraform apply.
 }
