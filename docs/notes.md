@@ -2,7 +2,7 @@
 
 Source qcow2
 Grabbed 2025-01-22
-https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd65.img
+https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 
 Only has a root account, no password.
 

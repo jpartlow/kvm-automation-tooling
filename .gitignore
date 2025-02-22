@@ -1,4 +1,15 @@
+Gemfile.lock
+
+# puppet
+.modules
+.plan_cache.json
+Puppetfile
+spec/fixtures/modules/kvm_automation_tooling
+.resource_types
+.task_cache.json
+
+# terraform
 .terraform*
-*.tfvars.json
+*.tfvars*
 *.tfstate
 *.tfstate.*

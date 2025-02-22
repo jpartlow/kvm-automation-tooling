@@ -1,0 +1,6 @@
+name: kvm_automation_tooling
+modules:
+  - name: puppetlabs/stdlib
+    version_requirement: '>= 9.7 < 10.0.0'
+  - name: puppetlabs/ruby_task_helper
+    version_requirement: '>= 1.0.0 < 2.0.0'
