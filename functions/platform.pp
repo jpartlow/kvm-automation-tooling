@@ -1,7 +1,7 @@
 # Generic function to produce a cononical descriptive platform string from a
 # set of os, version and cpu arch values.
 function kvm_automation_tooling::platform(
-  Kvm_automation_tooling::Operating_systems $os,
+  Kvm_automation_tooling::Operating_system $os,
   Kvm_automation_tooling::Version $version,
   Kvm_automation_tooling::Os_arch $arch,
 ) {
