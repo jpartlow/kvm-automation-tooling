@@ -25,7 +25,7 @@
 # @param $agent_disk_gb The amount of disk space in GB to allocate to each
 # agent vm.
 # @param $image_download_dir The directory where base os images are downloaded to.
-# @param $libvirt_images_dir The base directory where libvirt images are
+# @param $libvirt_images_dir The default directory where libvirt images are
 # stored (this is the default pool, and shouldn't be changed unless your
 # libvirt has a different local structure).
 plan kvm_automation_tooling::standup_cluster(
@@ -52,17 +52,20 @@ plan kvm_automation_tooling::standup_cluster(
   $tfvars_file = "./terraform/instances/${cluster_id}.tfvars.json"
   $tfstate_file = "./terraform/instances/${cluster_id}.tfstate"
 
-  # Ensure base image is present.
-  $base_image_name = "${platform}.qcow2"
-  $base_image_path = "${libvirt_images_dir}/${base_image_name}"
-  $base_image_found_result = run_command("test -f ${base_image_path}", 'localhost')
-  if !$base_image_found_result.ok() {
-    $base_image_url = kvm_automation_tooling::base_image_url($platform)
-    run_task('kvm_automation_tooling::download_and_import_base_image', 'localhost',
-      'image_url'    => $base_image_url,
-      'download_dir' => $image_download_dir,
-      'volume_name'  => $base_image_name,
-    )
+  # Ensure base image volume is present.
+  $base_volume_name = "${platform}.qcow2"
+  $base_volume_path = "${libvirt_images_dir}/${base_volume_name}"
+  $base_volume_found_result = run_command("test -f ${base_volume_path}", 'localhost')
+  if !$base_volume_found_result.ok() {
+    $image_url = kvm_automation_tooling::get_image_url($platform)
+    $image_name = $base_image_url.split('/')[-1]
+    $image_path = "${image_download_dir}/${image_name}"
+
+    $download_image_found_result = run_command("test -f ${image_path}", 'localhost')
+    if !$download_image_found_result.ok() {
+      run_command("curl -L -o ${image_download_dir} ${image_url}", 'localhost')
+    }
+    run_command("virsh vol-download --pool default --vol ${base_volume_name} --file ${image_path}", 'localhost')
   }
 
   # Ensure platform image pool exists.
@@ -80,8 +83,6 @@ plan kvm_automation_tooling::standup_cluster(
     agent_cpus => $agent_cpus,
     agent_mem_mb => $agent_mem_mb,
     agent_disk_gb => $agent_disk_gb,
-    base_image_path => $base_image_path,
-    libvirt_images_dir => $libvirt_images_dir,
     user => $user,
   }))
 
