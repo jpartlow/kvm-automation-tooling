@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-require 'kvm_automation_tooling/libvirt'
+require 'kvm_automation_tooling/libvirt_wrapper'
 
 class LibvirtTest
   # Specs manipulating the local libvirt environment are unexpected.  To
@@ -21,7 +21,8 @@ describe KvmAutomationTooling::LibvirtWrapper, if: LibvirtTest.libvirt_available
   let(:volumes) { pool.list_volumes }
 
   describe 'Client' do
-    let(:client) { KvmAutomationTooling::LibvirtWrapper::Client.new }
+    let(:connection) { Libvirt::open("qemu:///system") }
+    let(:client) { KvmAutomationTooling::LibvirtWrapper::Client.new(connection) }
   
     describe '#upload_volume' do
       let(:test_volume_name) { 'kvm-automation-tooling-spec-test-volume' }
@@ -99,12 +100,44 @@ describe KvmAutomationTooling::LibvirtWrapper, if: LibvirtTest.libvirt_available
     let(:tester) { Tester.new }
 
     it 'yields a Client instance with a libvirt connection' do
-      c = nil
+      cl = nil
       tester.with_libvirt do |client|
-        expect(client.volume_exist?(volumes.first)).to eq(true)
-        c = client
+        expect(client.pool_exist?('default')).to eq(true)
+        cl = client
       end
-      expect(c.lv).to be_closed
+      expect(cl.lv).to be_closed
+    end
+
+    it 'restarts with a fresh connection' do
+      cl = nil
+      con = nil
+      tester.with_libvirt do |client|
+        cl = client
+        con = client.lv
+        expect(client.pool_exist?('default')).to eq(true)
+      end
+      expect(cl.lv).to be_closed
+      expect(con).to be_closed
+
+      cl2 = nil
+      con2 = nil
+      tester.with_libvirt do |client|
+        cl2 = client
+        con2 = client.lv
+        expect(client.pool_exist?('default')).to eq(true)
+      end
+      expect(cl2).not_to equal(cl)
+      expect(con2).to be_closed
+      expect(con).not_to equal(con2)
+    end
+
+    it 'nests with_libvirt calls' do
+      test_instance = tester
+      test_instance.with_libvirt do |client|
+        test_instance.with_libvirt do |client2|
+          expect(client).to equal(client2)
+        end
+      end
     end
   end
 end
