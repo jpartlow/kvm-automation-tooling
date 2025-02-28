@@ -31,8 +31,8 @@
 plan kvm_automation_tooling::standup_cluster(
   String $cluster_name,
   String $user = system::env('USER'),
-  Kvm_automation_tooling::Architectures $architecture = 'singular',
-  Kvm_automation_tooling::Operating_systems $os,
+  Kvm_automation_tooling::Architecture $architecture = 'singular',
+  Kvm_automation_tooling::Operating_system $os,
   Kvm_automation_tooling::Version $os_version,
   Kvm_automation_tooling::Os_arch $os_arch,
   Integer $agents = 1,
@@ -52,24 +52,11 @@ plan kvm_automation_tooling::standup_cluster(
   $tfvars_file = "./terraform/instances/${cluster_id}.tfvars.json"
   $tfstate_file = "./terraform/instances/${cluster_id}.tfstate"
 
-  # Ensure base image volume is present.
-  $base_volume_name = "${platform}.qcow2"
-  $base_volume_path = "${libvirt_images_dir}/${base_volume_name}"
-  $base_volume_found_result = run_command("test -f ${base_volume_path}", 'localhost')
-  if !$base_volume_found_result.ok() {
-    $image_url = kvm_automation_tooling::get_image_url($platform)
-    $image_name = $base_image_url.split('/')[-1]
-    $image_path = "${image_download_dir}/${image_name}"
-
-    $download_image_found_result = run_command("test -f ${image_path}", 'localhost')
-    if !$download_image_found_result.ok() {
-      run_command("curl -L -o ${image_download_dir} ${image_url}", 'localhost')
-    }
-    run_command("virsh vol-download --pool default --vol ${base_volume_name} --file ${image_path}", 'localhost')
-  }
-
-  # Ensure platform image pool exists.
-
+  # Ensure base image volume is present and a platform image pool exists.
+  run_plan('kvm_automation_tooling::subplans::manage_base_image_volume',
+    'platform' => $platform,
+    'image_download_dir' => $image_download_dir,
+  )
 
   # Write tfvars.json file.
   file::write($tfvars_file, to_json({
