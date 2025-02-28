@@ -1,6 +1,10 @@
 {
   "description": "Downloads an image from the given url to a given directory. Requires curl.",
   "input_method": "stdin",
+  "files": [
+    "kvm_automation_tooling/lib/kvm_automation_tooling/command.rb",
+    "ruby_task_helper/files/task_helper.rb"
+  ],
   "parameters": {
     "image_url": {
       "type": "String",

@@ -28,7 +28,7 @@
 #   each agent vm.
 # @param image_download_dir The directory where base os images are
 #   downloaded to.
-# @param terraform_dir The directory where terraform state files
+# @param terraform_state_dir The directory where terraform state files
 #   are stored.
 plan kvm_automation_tooling::standup_cluster(
   String $cluster_name,

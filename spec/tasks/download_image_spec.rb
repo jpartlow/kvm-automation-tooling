@@ -13,7 +13,7 @@ describe 'task: download_image.rb' do
     end
 
     it 'downloads the image if not present' do
-      expect(Open3).to receive('capture2e').with('curl', '-L', '-o', 'DIR', 'URL/IMAGE').and_return(['output', success])
+      expect(Open3).to receive('capture2e').with('curl', '-L', '-o', 'DIR/IMAGE', 'URL/IMAGE').and_return(['output', success])
   
       expect(task.task(image_url: 'URL/IMAGE', download_dir: 'DIR')).to match(
         {
@@ -32,6 +32,9 @@ describe 'task: download_image.rb' do
         }
       )
     end
+
+    # ~/images doesn't get expanded within an Open3 call...
+    it 'expands download_dir to an absolute path'
   end
 
   it 'raises an error if curl not found' do

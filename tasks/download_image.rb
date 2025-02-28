@@ -16,7 +16,7 @@ class DownloadImage < TaskHelper
     which!('curl', task_args: kwargs)
 
     if !File.exist?(image_path)
-      cmd_array = ['curl', '-L', '-o', download_dir, image_url]
+      cmd_array = ['curl', '-L', '-o', image_path, image_url]
       run!(cmd_array, task_args: kwargs, err_msg: "Failed to download '#{image_url}' to '#{download_dir}'.")
       status[:already_exists] = false
     end

@@ -1,6 +1,10 @@
 {
   "description": "Imports a local image file as a libvirt volume in the default pool.",
   "input_method": "stdin",
+  "files": [
+    "kvm_automation_tooling/lib/kvm_automation_tooling/libvirt_wrapper.rb",
+    "ruby_task_helper/files/task_helper.rb"
+  ],
   "parameters": {
     "image_path": {
       "type": "String",
