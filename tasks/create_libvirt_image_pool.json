@@ -1,0 +1,10 @@
+{
+  "description": "Idempotently creates a new directory image pool in libvirt. The new pool is created locally within the default storage pool directory.",
+  "input_method": "stdin",
+  "parameters": {
+    "name": {
+      "type": "String",
+      "description": "The name of the pool to create."
+    }
+  }
+}
