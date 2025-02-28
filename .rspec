@@ -1,1 +1,2 @@
 --exclude-pattern fixtures/modules/kvm_automation_tooling/**/*_spec.rb
+-f documentation
