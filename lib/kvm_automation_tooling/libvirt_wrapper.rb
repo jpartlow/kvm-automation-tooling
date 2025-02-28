@@ -5,17 +5,30 @@ module KvmAutomationTooling
   # Library for interacting with libvirt through the ruby-libvert gem.
   module LibvirtWrapper
 
+    def self.connection
+      @connection ||= new_connection
+    end
+
+    def self.new_connection
+      Libvirt::open("qemu:///system")
+    end
+
+    def self.close
+      @connection.close
+      @connection = nil
+    end
+
     # Wrapper around the libvirt gem to provide a more user-friendly
     # interface.
     class Client
       attr_reader :lv
 
-      def initialize
-        @lv = Libvirt::open("qemu:///system")
+      def initialize(connection)
+        @lv = connection
       end
 
       # https://gitlab.com/libvirt/libvirt-ruby/-/blob/master/examples/upload_volume.rb
-      def upload_volume(file_path, volume_name, capacity = 3)
+      def upload_volume(volume_name, file_path:, capacity: 3)
         # get a reference to the default storage pool
         pool = lv.lookup_storage_pool_by_name("default")
         # create the new volume in the storage pool
@@ -116,11 +129,12 @@ module KvmAutomationTooling
       if @libvirt
         yield(@libvirt)
       else
-        @libvirt = Client.new
+        @libvirt = Client.new(LibvirtWrapper.connection)
         begin
           yield(@libvirt)
         ensure
-          @libvirt.close
+          @libvirt = nil
+          LibvirtWrapper.close
         end
       end
     end
