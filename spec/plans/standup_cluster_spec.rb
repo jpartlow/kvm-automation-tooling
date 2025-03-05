@@ -39,7 +39,6 @@ describe 'plan: standup_cluster' do
       )
 
     result = run_plan('kvm_automation_tooling::standup_cluster', params)
-    puts %x[ls -l #{terraform_state_dir}]
     expect(result.ok?).to(eq(true), result.value)
   end
 end

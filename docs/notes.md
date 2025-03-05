@@ -117,3 +117,28 @@ and bind more generally to any virtio named interface (via "match"
 https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html#match-mapping).
 
 A `terraform apply` now starts up a vm that I can ssh into as ubuntu with my id_vms key.
+
+## networking
+
+The bridge is created by libvirt, and the interface to it is visible in `ip a` as virbr0.
+
+Name resolution from the host to the guests can be setup simply using libnss-libvirt.
+
+```bash
+sudo apt install libnss-libvirt
+```
+
+Need to manually update /etc/nsswitch.conf to include libvirt and libvirt_guest in the hosts line.
+On ubuntu 24.04, I ended up with:
+
+```bash
+hosts: files mdns4_minimal libvirt libvirt_guest [NOTFOUND=return] dns mymachines
+```
+
+Name resolution between guests can be added to the libvirt network definition. For the default network, for example, can add (via `virsh net-edit`):
+
+```xml
+  <domain name='vm' localOnly='yes'/>
+```
+
+Need to restart the network for the changes to take effect. (via `virsh net-destroy default` and `virsh net-start default`).

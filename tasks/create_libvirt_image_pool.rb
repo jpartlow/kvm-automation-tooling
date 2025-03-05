@@ -6,11 +6,11 @@ require_relative "../lib/kvm_automation_tooling/libvirt_wrapper.rb"
 class CreateLibvirtImagePool < TaskHelper
   include KvmAutomationTooling::LibvirtWrapper
 
-  def task(pool_name:, **kwargs)
+  def task(name:, **kwargs)
     created = false
     with_libvirt do |lv|
-      if !lv.pool_exist?(pool_name)
-        lv.create_pool(pool_name)
+      if !lv.pool_exist?(name)
+        lv.create_pool(name)
         created = true
       end
     end
