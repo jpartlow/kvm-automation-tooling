@@ -1,6 +1,5 @@
 locals {
   identifier = "${var.cluster_id}-${var.hostname}"
-  fqdn = "${var.hostname}.${var.domain_name}"
 
   # The path to the cloud-init configuration templates
   cloud_init_path = "${path.module}/../../../cloud-init"
@@ -20,6 +19,7 @@ locals {
   meta_data = templatefile(
     "${local.cloud_init_path}/meta-data.yaml.tftpl",
     {
+      instance_id = "i-${uuid()}",
       hostname = var.hostname,
     }
   )

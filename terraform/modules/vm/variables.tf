@@ -58,9 +58,3 @@ variable "network_id" {
   description = "The libvirt network to attach the VM to."
   type = string
 }
-
-#
-#variable "bridge_device" {
-#  description = "The name of the libvirt bridge to configure the domain's network with."
-#  type = string
-#}

@@ -142,3 +142,13 @@ Name resolution between guests can be added to the libvirt network definition. F
 ```
 
 Need to restart the network for the changes to take effect. (via `virsh net-destroy default` and `virsh net-start default`).
+
+### machine-id
+
+Beware /etc/machine-id. The base image shouldn't have one, so that it can
+be generated automatically during bootstrap. But if you have accidentally
+started up a vm using the base image alone, then it will already have a
+machine-id, and new vms using that image for a base will end up with the
+same base-id which will destroy networking. The dhcpd dnsmasq daemon will
+assign the same ip to multiple vms based on the machine-id. Which doesn't
+work well.

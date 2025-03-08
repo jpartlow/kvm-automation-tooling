@@ -33,6 +33,10 @@
 # @param terraform_state_dir The directory where terraform state files
 #   are stored. This should be an absolute or Puppet module relative
 #   path that the find_files function can locate.
+# @param ssh_public_key_path The path to the public key to add to the
+#   guest's login user ~/.ssh/authorized_keys, allowing ssh access.
+# @param user_password The password to set for the login user on the vms.
+#   This is optional and should only be used for debugging.
 plan kvm_automation_tooling::standup_cluster(
   String $cluster_name,
   Kvm_automation_tooling::Architecture $architecture = 'singular',
@@ -50,6 +54,7 @@ plan kvm_automation_tooling::standup_cluster(
   String $image_download_dir = "${system::env('HOME')}/images",
   String $terraform_state_dir = 'kvm_automation_tooling/../terraform/instances',
   String $ssh_public_key_path = "${system::env('HOME')}/.ssh/id_rsa.pub",
+  Sensitive[String] $user_password = '',
 ) {
   $terraform_dir = './terraform'
   $platform = kvm_automation_tooling::platform($os, $os_version, $os_arch)
@@ -75,6 +80,7 @@ plan kvm_automation_tooling::standup_cluster(
     pool_name => $image_results['pool_name'],
     network_addresses => $network_addresses,
     ssh_public_key_path => $ssh_public_key_path,
+    user_password => $user_password.unwrap,
     agent_count => $agents,
     primary_cpus => $primary_cpus,
     primary_mem_mb => $primary_mem_mb,

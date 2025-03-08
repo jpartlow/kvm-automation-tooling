@@ -31,7 +31,7 @@ resource "libvirt_cloudinit_disk" "commoninit" {
 
 # Create the machine
 resource "libvirt_domain" "domain" {
-  name   = "vm.${local.identifier}"
+  name   = "${local.identifier}"
   memory = var.memory
   vcpu   = var.cpus
   qemu_agent = true
@@ -40,7 +40,7 @@ resource "libvirt_domain" "domain" {
 
   network_interface {
     network_id = var.network_id
-    hostname = local.fqdn
+    hostname = var.hostname
     wait_for_lease = true
   }
 
